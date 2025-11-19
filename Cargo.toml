@@ -1,0 +1,18 @@
+[package]
+name = "unsent"
+version = "1.0.0"
+edition = "2024"
+authors = ["sourav"]
+license = "MIT"
+description = "Rust SDK for the Unsent API - Send transactional emails with ease"
+homepage = "https://unsent.dev"
+repository = "https://github.com/souravsspace/unsent-rust"
+documentation = "https://docs.unsent.dev"
+keywords = ["unsent", "email", "transactional-email", "api", "sdk"]
+readme = "README.md"
+
+[dependencies]
+reqwest = { version = "0.11", features = ["json", "blocking"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
