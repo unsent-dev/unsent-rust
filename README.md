@@ -140,6 +140,18 @@ let response = emails.batch(&batch)?;
 println!("Sent {} emails", response.emails.len());
 ```
 
+#### Idempotent Retries
+
+To prevent duplicate emails when retrying failed requests, you can provide an idempotency key.
+
+```rust
+use unsent::types::RequestOptions;
+
+let options = RequestOptions::new().with_idempotency_key("unique-key-123");
+
+let response = emails.send_with_options(&email, &options)?;
+```
+
 ### Managing Emails
 
 #### Get Email Details

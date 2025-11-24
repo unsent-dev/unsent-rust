@@ -14,12 +14,32 @@ impl<'a> EmailsClient<'a> {
         self.create(payload)
     }
 
+    pub fn send_with_options(&self, payload: &EmailCreate, options: &RequestOptions) -> Result<EmailCreateResponse> {
+        self.create_with_options(payload, options)
+    }
+
     pub fn create(&self, payload: &EmailCreate) -> Result<EmailCreateResponse> {
         self.client.post("/emails", payload)
     }
 
+    pub fn create_with_options(&self, payload: &EmailCreate, options: &RequestOptions) -> Result<EmailCreateResponse> {
+        let mut headers = reqwest::header::HeaderMap::new();
+        if let Some(key) = &options.idempotency_key {
+            headers.insert("Idempotency-Key", reqwest::header::HeaderValue::from_str(key).unwrap());
+        }
+        self.client.post_with_headers("/emails", payload, headers)
+    }
+
     pub fn batch(&self, emails: &[EmailBatchItem]) -> Result<EmailBatchResponse> {
         self.client.post("/emails/batch", &emails)
+    }
+
+    pub fn batch_with_options(&self, emails: &[EmailBatchItem], options: &RequestOptions) -> Result<EmailBatchResponse> {
+        let mut headers = reqwest::header::HeaderMap::new();
+        if let Some(key) = &options.idempotency_key {
+            headers.insert("Idempotency-Key", reqwest::header::HeaderValue::from_str(key).unwrap());
+        }
+        self.client.post_with_headers("/emails/batch", &emails, headers)
     }
 
     pub fn get(&self, email_id: &str) -> Result<Email> {

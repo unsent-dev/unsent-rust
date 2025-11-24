@@ -71,6 +71,7 @@ impl Client {
         method: reqwest::Method,
         path: &str,
         body: Option<&impl serde::Serialize>,
+        headers: Option<reqwest::header::HeaderMap>,
     ) -> Result<T> {
         let url = format!("{}{}", self.base_url, path);
         
@@ -78,6 +79,10 @@ impl Client {
             .request(method.clone(), &url)
             .header("Authorization", format!("Bearer {}", self.key))
             .header("Content-Type", "application/json");
+
+        if let Some(h) = headers {
+            request = request.headers(h);
+        }
 
         if let Some(body) = body {
             request = request.json(body);
@@ -106,11 +111,28 @@ impl Client {
         path: &str,
         body: &impl serde::Serialize,
     ) -> Result<T> {
-        self.request(reqwest::Method::POST, path, Some(body))
+        self.request(reqwest::Method::POST, path, Some(body), None)
+    }
+
+    pub fn post_with_headers<T: serde::de::DeserializeOwned>(
+        &self,
+        path: &str,
+        body: &impl serde::Serialize,
+        headers: reqwest::header::HeaderMap,
+    ) -> Result<T> {
+        self.request(reqwest::Method::POST, path, Some(body), Some(headers))
     }
 
     pub fn get<T: serde::de::DeserializeOwned>(&self, path: &str) -> Result<T> {
-        self.request::<T>(reqwest::Method::GET, path, None::<&()>)
+        self.request::<T>(reqwest::Method::GET, path, None::<&()>, None)
+    }
+
+    pub fn get_with_headers<T: serde::de::DeserializeOwned>(
+        &self,
+        path: &str,
+        headers: reqwest::header::HeaderMap,
+    ) -> Result<T> {
+        self.request::<T>(reqwest::Method::GET, path, None::<&()>, Some(headers))
     }
 
     pub fn put<T: serde::de::DeserializeOwned>(
@@ -118,7 +140,16 @@ impl Client {
         path: &str,
         body: &impl serde::Serialize,
     ) -> Result<T> {
-        self.request(reqwest::Method::PUT, path, Some(body))
+        self.request(reqwest::Method::PUT, path, Some(body), None)
+    }
+
+    pub fn put_with_headers<T: serde::de::DeserializeOwned>(
+        &self,
+        path: &str,
+        body: &impl serde::Serialize,
+        headers: reqwest::header::HeaderMap,
+    ) -> Result<T> {
+        self.request(reqwest::Method::PUT, path, Some(body), Some(headers))
     }
 
     pub fn patch<T: serde::de::DeserializeOwned>(
@@ -126,10 +157,27 @@ impl Client {
         path: &str,
         body: &impl serde::Serialize,
     ) -> Result<T> {
-        self.request(reqwest::Method::PATCH, path, Some(body))
+        self.request(reqwest::Method::PATCH, path, Some(body), None)
+    }
+
+    pub fn patch_with_headers<T: serde::de::DeserializeOwned>(
+        &self,
+        path: &str,
+        body: &impl serde::Serialize,
+        headers: reqwest::header::HeaderMap,
+    ) -> Result<T> {
+        self.request(reqwest::Method::PATCH, path, Some(body), Some(headers))
     }
 
     pub fn delete<T: serde::de::DeserializeOwned>(&self, path: &str) -> Result<T> {
-        self.request::<T>(reqwest::Method::DELETE, path, None::<&()>)
+        self.request::<T>(reqwest::Method::DELETE, path, None::<&()>, None)
+    }
+
+    pub fn delete_with_headers<T: serde::de::DeserializeOwned>(
+        &self,
+        path: &str,
+        headers: reqwest::header::HeaderMap,
+    ) -> Result<T> {
+        self.request::<T>(reqwest::Method::DELETE, path, None::<&()>, Some(headers))
     }
 }

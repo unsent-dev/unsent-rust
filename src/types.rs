@@ -307,3 +307,19 @@ pub struct DomainDeleteResponse {
     pub id: i32,
     pub deleted: bool,
 }
+
+#[derive(Debug, Clone, Default)]
+pub struct RequestOptions {
+    pub idempotency_key: Option<String>,
+}
+
+impl RequestOptions {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn with_idempotency_key(mut self, key: impl Into<String>) -> Self {
+        self.idempotency_key = Some(key.into());
+        self
+    }
+}
