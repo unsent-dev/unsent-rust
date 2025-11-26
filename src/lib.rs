@@ -5,7 +5,7 @@
 //! ```no_run
 //! use unsent::{Client, types::EmailCreate};
 //!
-//! let client = Client::new("us_12345").unwrap();
+//! let client = Client::new("un_xxxx").unwrap();
 //! let emails = unsent::emails::EmailsClient::new(&client);
 //!
 //! let email = EmailCreate {

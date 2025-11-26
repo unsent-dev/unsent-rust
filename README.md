@@ -25,7 +25,7 @@ unsent = "1.0"
 use unsent::{Client, types::EmailCreate};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = Client::new("us_12345")?;
+    let client = Client::new("un_xxxx")?;
     
     // Use the client
     Ok(())
@@ -49,7 +49,7 @@ let client = Client::new("")?;
 ```rust
 use unsent::{Client, types::EmailCreate, emails::EmailsClient};
 
-let client = Client::new("us_12345")?;
+let client = Client::new("un_xxxx")?;
 let emails = EmailsClient::new(&client);
 
 let email = EmailCreate {
@@ -192,7 +192,7 @@ println!("Email cancelled successfully");
 use unsent::{types::ContactCreate, contacts::ContactsClient};
 use std::collections::HashMap;
 
-let client = Client::new("us_12345")?;
+let client = Client::new("un_xxxx")?;
 let contacts = ContactsClient::new(&client);
 
 let mut metadata = HashMap::new();
@@ -260,7 +260,7 @@ let response = contacts.delete("contact_book_id", "contact_id")?;
 ```rust
 use unsent::{types::CampaignCreate, campaigns::CampaignsClient};
 
-let client = Client::new("us_12345")?;
+let client = Client::new("un_xxxx")?;
 let campaigns = CampaignsClient::new(&client);
 
 let campaign = CampaignCreate {
@@ -315,7 +315,7 @@ println!("Sent: {}", campaign.sent);
 ```rust
 use unsent::domains::DomainsClient;
 
-let client = Client::new("us_12345")?;
+let client = Client::new("un_xxxx")?;
 let domains = DomainsClient::new(&client);
 
 let domain_list = domains.list()?;
@@ -356,7 +356,7 @@ The SDK uses Rust's `Result` type for error handling:
 ```rust
 use unsent::{Client, UnsentError};
 
-let client = Client::new("us_12345")?;
+let client = Client::new("un_xxxx")?;
 
 match emails.send(&email) {
     Ok(response) => println!("Email sent! ID: {}", response.id),
@@ -370,7 +370,7 @@ match emails.send(&email) {
 To disable automatic error raising:
 
 ```rust
-let client = Client::new("us_12345")?.with_raise_on_error(false);
+let client = Client::new("un_xxxx")?.with_raise_on_error(false);
 ```
 
 ### Custom HTTP Client
@@ -385,7 +385,7 @@ let http_client = HttpClient::builder()
     .timeout(Duration::from_secs(30))
     .build()?;
 
-let client = Client::new("us_12345")?.with_http_client(http_client);
+let client = Client::new("un_xxxx")?.with_http_client(http_client);
 ```
 
 ## API Reference
