@@ -1,4 +1,4 @@
-use crate::types::*;
+use crate::models::APIError;
 use reqwest::blocking::Client as HttpClient;
 use std::env;
 
@@ -8,19 +8,20 @@ const DEFAULT_BASE_URL: &str = "https://api.unsent.dev";
 pub enum UnsentError {
     #[error("HTTP error: {0}")]
     Http(#[from] reqwest::Error),
-    
+
     #[error("API error: {0}")]
     Api(#[from] APIError),
-    
+
     #[error("JSON error: {0}")]
     Json(#[from] serde_json::Error),
-    
+
     #[error("{0}")]
     Other(String),
 }
 
 pub type Result<T> = std::result::Result<T, UnsentError>;
 
+#[derive(Clone)]
 pub struct Client {
     key: String,
     base_url: String,
@@ -74,8 +75,9 @@ impl Client {
         headers: Option<reqwest::header::HeaderMap>,
     ) -> Result<T> {
         let url = format!("{}{}", self.base_url, path);
-        
-        let mut request = self.http_client
+
+        let mut request = self
+            .http_client
             .request(method.clone(), &url)
             .header("Authorization", format!("Bearer {}", self.key))
             .header("Content-Type", "application/json");
@@ -91,13 +93,14 @@ impl Client {
         let response = request.send()?;
         let status = response.status();
         let body_text = response.text()?;
-        
+
         if !status.is_success() {
-            let api_error: APIError = serde_json::from_str(&body_text).unwrap_or_else(|_| APIError {
-                code: "INTERNAL_SERVER_ERROR".to_string(),
-                message: "Unknown error".to_string(),
-            });
-            
+            let api_error: APIError =
+                serde_json::from_str(&body_text).unwrap_or_else(|_| APIError {
+                    code: "INTERNAL_SERVER_ERROR".to_string(),
+                    message: "Unknown error".to_string(),
+                });
+
             if self.raise_on_error {
                 return Err(UnsentError::Api(api_error));
             }

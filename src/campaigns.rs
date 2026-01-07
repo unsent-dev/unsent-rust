@@ -1,5 +1,5 @@
 use crate::client::{Client, Result};
-use crate::types::*;
+use crate::models::*;
 
 pub struct CampaignsClient<'a> {
     client: &'a Client,
@@ -18,17 +18,70 @@ impl<'a> CampaignsClient<'a> {
         self.client.get(&format!("/campaigns/{}", campaign_id))
     }
 
-    pub fn schedule(&self, campaign_id: &str, payload: &CampaignSchedule) -> Result<CampaignScheduleResponse> {
-        self.client.post(&format!("/campaigns/{}/schedule", campaign_id), payload)
+    pub fn schedule(
+        &self,
+        campaign_id: &str,
+        payload: &CampaignSchedule,
+    ) -> Result<CampaignScheduleResponse> {
+        self.client
+            .post(&format!("/campaigns/{}/schedule", campaign_id), payload)
     }
 
     pub fn pause(&self, campaign_id: &str) -> Result<CampaignActionResponse> {
         let empty: std::collections::HashMap<String, String> = std::collections::HashMap::new();
-        self.client.post(&format!("/campaigns/{}/pause", campaign_id), &empty)
+        self.client
+            .post(&format!("/campaigns/{}/pause", campaign_id), &empty)
     }
 
     pub fn resume(&self, campaign_id: &str) -> Result<CampaignActionResponse> {
         let empty: std::collections::HashMap<String, String> = std::collections::HashMap::new();
-        self.client.post(&format!("/campaigns/{}/resume", campaign_id), &empty)
+        self.client
+            .post(&format!("/campaigns/{}/resume", campaign_id), &empty)
+    }
+
+    /// List all campaigns
+    pub fn list(&self) -> Result<Vec<CampaignListItem>> {
+        self.client.get("/campaigns")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_campaigns_paths() {
+        let paths = vec![
+            "/campaigns",
+            "/campaigns/test-id",
+            "/campaigns/test-id/schedule",
+            "/campaigns/test-id/pause",
+            "/campaigns/test-id/resume",
+        ];
+
+        for path in paths {
+            assert!(path.starts_with("/campaigns"));
+        }
+    }
+
+    #[test]
+    fn test_campaign_create() {
+        let req = CampaignCreate::new(
+            "Newsletter".to_string(),
+            "newsletter@example.com".to_string(),
+            "Weekly Updates".to_string(),
+            "book-id".to_string(),
+        );
+        assert_eq!(req.name, "Newsletter");
+        assert_eq!(req.from, "newsletter@example.com");
+        assert_eq!(req.subject, "Weekly Updates");
+        assert_eq!(req.contact_book_id, "book-id");
+    }
+
+    #[test]
+    fn test_campaign_schedule() {
+        let req = CampaignSchedule::new();
+        assert_eq!(req.scheduled_at, None);
+        assert_eq!(req.batch_size, None);
     }
 }

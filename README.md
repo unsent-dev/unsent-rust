@@ -15,6 +15,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 unsent = "1.0"
+serde_json = "1.0"
 ```
 
 ## Usage
@@ -22,7 +23,7 @@ unsent = "1.0"
 ### Basic Setup
 
 ```rust
-use unsent::{Client, types::EmailCreate};
+use unsent::{Client, models::EmailCreate};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::new("un_xxxx")?;
@@ -47,22 +48,18 @@ let client = Client::new("")?;
 #### Simple Email
 
 ```rust
-use unsent::{Client, types::EmailCreate, emails::EmailsClient};
+use unsent::{Client, models::EmailCreate, emails::EmailsClient};
 
 let client = Client::new("un_xxxx")?;
 let emails = EmailsClient::new(&client);
 
 let email = EmailCreate {
-    to: "hello@acme.com".to_string(),
+    to: serde_json::json!("hello@acme.com"),
     from: "hello@company.com".to_string(),
-    subject: "Unsent email".to_string(),
-    html: Some("<p>Unsent is the best email service provider to send emails</p>".to_string()),
-    text: Some("Unsent is the best email service provider to send emails".to_string()),
-    reply_to: None,
-    cc: None,
-    bcc: None,
-    attachments: None,
-    scheduled_at: None,
+    subject: Some("Unsent email".to_string()),
+    html: Some(Some("<p>Unsent is the best email service provider to send emails</p>".to_string())),
+    text: Some(Some("Unsent is the best email service provider to send emails".to_string())),
+    ..Default::default()
 };
 
 let response = emails.send(&email)?;
@@ -72,18 +69,18 @@ println!("Email sent! ID: {}", response.id);
 #### Email with Attachments
 
 ```rust
-use unsent::types::{EmailCreate, Attachment};
+use unsent::models::{EmailCreate, Attachment};
 
 let email = EmailCreate {
-    to: "hello@acme.com".to_string(),
+    to: serde_json::json!("hello@acme.com"),
     from: "hello@company.com".to_string(),
-    subject: "Email with attachment".to_string(),
-    html: Some("<p>Please find the attachment below</p>".to_string()),
+    subject: Some("Email with attachment".to_string()),
+    html: Some(Some("<p>Please find the attachment below</p>".to_string())),
     attachments: Some(vec![
-        Attachment {
-            filename: "document.pdf".to_string(),
-            content: "base64-encoded-content-here".to_string(),
-        }
+        serde_json::json!({
+            "filename": "document.pdf",
+            "content": "base64-encoded-content-here"
+        })
     ]),
     ..Default::default()
 };
@@ -99,10 +96,10 @@ use chrono::{Utc, Duration};
 let scheduled_time = (Utc::now() + Duration::hours(1)).to_rfc3339();
 
 let email = EmailCreate {
-    to: "hello@acme.com".to_string(),
+    to: serde_json::json!("hello@acme.com"),
     from: "hello@company.com".to_string(),
-    subject: "Scheduled email".to_string(),
-    html: Some("<p>This email was scheduled</p>".to_string()),
+    subject: Some("Scheduled email".to_string()),
+    html: Some(Some("<p>This email was scheduled</p>".to_string())),
     scheduled_at: Some(scheduled_time),
     ..Default::default()
 };
@@ -113,31 +110,27 @@ let response = emails.send(&email)?;
 #### Batch Emails
 
 ```rust
-use unsent::types::EmailBatchItem;
+use unsent::models::EmailBatchItem;
 
 let batch = vec![
     EmailBatchItem {
-        to: "user1@example.com".to_string(),
+        to: serde_json::json!("user1@example.com"),
         from: "hello@company.com".to_string(),
-        subject: "Hello User 1".to_string(),
-        html: Some("<p>Welcome User 1</p>".to_string()),
-        text: None,
-        attachments: None,
-        scheduled_at: None,
+        subject: Some("Hello User 1".to_string()),
+        html: Some(Some("<p>Welcome User 1</p>".to_string())),
+        ..Default::default()
     },
     EmailBatchItem {
-        to: "user2@example.com".to_string(),
+        to: serde_json::json!("user2@example.com"),
         from: "hello@company.com".to_string(),
-        subject: "Hello User 2".to_string(),
-        html: Some("<p>Welcome User 2</p>".to_string()),
-        text: None,
-        attachments: None,
-        scheduled_at: None,
+        subject: Some("Hello User 2".to_string()),
+        html: Some(Some("<p>Welcome User 2</p>".to_string())),
+        ..Default::default()
     },
 ];
 
 let response = emails.batch(&batch)?;
-println!("Sent {} emails", response.emails.len());
+println!("Sent {} emails", response.ids.len());
 ```
 
 #### Idempotent Retries
@@ -145,9 +138,11 @@ println!("Sent {} emails", response.emails.len());
 To prevent duplicate emails when retrying failed requests, you can provide an idempotency key.
 
 ```rust
-use unsent::types::RequestOptions;
+use unsent::models::RequestOptions;
 
-let options = RequestOptions::new().with_idempotency_key("unique-key-123");
+let options = RequestOptions {
+    idempotency_key: Some("unique-key-123".to_string()),
+};
 
 let response = emails.send_with_options(&email, &options)?;
 ```
@@ -158,20 +153,16 @@ let response = emails.send_with_options(&email, &options)?;
 
 ```rust
 let email = emails.get("email_id")?;
-println!("Email status: {}", email.status);
+println!("Email status: {}", email.data["status"]);
 ```
 
 #### Update Email
 
 ```rust
-use unsent::types::EmailUpdate;
+use unsent::models::EmailUpdate;
 
 let update = EmailUpdate {
-    subject: Some("Updated subject".to_string()),
-    html: Some("<p>Updated content</p>".to_string()),
-    text: None,
     scheduled_at: None,
-    attachments: None,
 };
 
 let response = emails.update("email_id", &update)?;
@@ -189,7 +180,7 @@ println!("Email cancelled successfully");
 #### Create Contact
 
 ```rust
-use unsent::{types::ContactCreate, contacts::ContactsClient};
+use unsent::{models::ContactCreate, contacts::ContactsClient};
 use std::collections::HashMap;
 
 let client = Client::new("un_xxxx")?;
@@ -204,6 +195,10 @@ let contact = ContactCreate {
     first_name: Some("John".to_string()),
     last_name: Some("Doe".to_string()),
     metadata: Some(metadata),
+    
+    // Optional fields
+    phone_number: None,
+    subscribed: None,
 };
 
 let response = contacts.create("contact_book_id", &contact)?;
@@ -218,7 +213,7 @@ let contact = contacts.get("contact_book_id", "contact_id")?;
 #### Update Contact
 
 ```rust
-use unsent::types::ContactUpdate;
+use unsent::models::ContactUpdate;
 
 let mut metadata = HashMap::new();
 metadata.insert("role".to_string(), serde_json::json!("Senior Developer"));
@@ -227,6 +222,11 @@ let update = ContactUpdate {
     first_name: Some("Jane".to_string()),
     last_name: None,
     metadata: Some(metadata),
+    
+    // Optional
+    email: None,
+    phone_number: None,
+    subscribed: None,
 };
 
 let response = contacts.update("contact_book_id", "contact_id", &update)?;
@@ -235,15 +235,20 @@ let response = contacts.update("contact_book_id", "contact_id", &update)?;
 #### Upsert Contact
 
 ```rust
-use unsent::types::ContactUpsert;
+use unsent::models::ContactUpsert;
 
 let upsert = ContactUpsert {
-    email: "user@example.com".to_string(),
+    email: Some("user@example.com".to_string()),
     first_name: Some("John".to_string()),
     last_name: Some("Doe".to_string()),
     metadata: None,
+    
+    // Optional fields
+    phone_number: None,
+    subscribed: None,
 };
 
+// Note: Pass upsert struct directly, serialization handles wrapper
 let response = contacts.upsert("contact_book_id", "contact_id", &upsert)?;
 ```
 
@@ -258,7 +263,7 @@ let response = contacts.delete("contact_book_id", "contact_id")?;
 #### Create Campaign
 
 ```rust
-use unsent::{types::CampaignCreate, campaigns::CampaignsClient};
+use unsent::{models::CampaignCreate, campaigns::CampaignsClient};
 
 let client = Client::new("un_xxxx")?;
 let campaigns = CampaignsClient::new(&client);
@@ -269,16 +274,22 @@ let campaign = CampaignCreate {
     html: "<p>Thanks for joining us!</p>".to_string(),
     from: "welcome@example.com".to_string(),
     contact_book_id: "cb_1234567890".to_string(),
+    
+    // Optional fields
+    reply_to: None,
+    cc: None,
+    bcc: None,
+    attachments: None,
 };
 
 let response = campaigns.create(&campaign)?;
-println!("Campaign created! ID: {}", response.id);
+println!("Campaign created! ID: {}", response.campaign.id);
 ```
 
 #### Schedule Campaign
 
 ```rust
-use unsent::types::CampaignSchedule;
+use unsent::models::CampaignSchedule;
 
 let schedule = CampaignSchedule {
     scheduled_at: "2024-12-01T10:00:00Z".to_string(),
@@ -302,10 +313,10 @@ println!("Campaign resumed successfully!");
 #### Get Campaign Details
 
 ```rust
-let campaign = campaigns.get("campaign_id")?;
-println!("Campaign status: {}", campaign.status);
-println!("Recipients: {}", campaign.total);
-println!("Sent: {}", campaign.sent);
+let campaign_item = campaigns.get("campaign_id")?;
+println!("Campaign status: {:?}", campaign_item.status);
+println!("Recipients: {:?}", campaign_item.stats.total);
+println!("Sent: {:?}", campaign_item.stats.sent);
 ```
 
 ### Managing Domains
@@ -320,14 +331,14 @@ let domains = DomainsClient::new(&client);
 
 let domain_list = domains.list()?;
 for domain in domain_list {
-    println!("Domain: {}, Status: {}", domain.domain, domain.status);
+    println!("Domain: {}, Status: {:?}", domain.domain, domain.status);
 }
 ```
 
 #### Create Domain
 
 ```rust
-use unsent::types::DomainCreate;
+use unsent::models::DomainCreate;
 
 let domain = DomainCreate {
     domain: "example.com".to_string(),
@@ -339,14 +350,68 @@ let response = domains.create(&domain)?;
 #### Verify Domain
 
 ```rust
-let response = domains.verify(123)?;
-println!("Verification status: {}", response.status);
+let response = domains.verify("domain_id")?;
+println!("Verification status: {}", response.success);
 ```
 
 #### Get Domain
 
 ```rust
-let domain = domains.get(123)?;
+let domain = domains.get("domain_id")?;
+```
+
+#### Delete Domain
+
+```rust
+let response = domains.delete("domain_id")?;
+```
+
+### Managing Webhooks (Coming Soon)
+
+> **Note**: Webhooks are currently in development and not fully implemented (server-side). The SDK includes these methods for future compatibility.
+
+#### List Webhooks
+
+```rust
+use unsent::webhooks::WebhooksClient;
+
+let client = Client::new("un_xxxx")?;
+let webhooks = WebhooksClient::new(&client);
+
+let refs = webhooks.list()?;
+```
+
+#### Create Webhook
+
+```rust
+use unsent::models::WebhookCreate;
+
+let webhook = WebhookCreate {
+    url: "https://example.com/webhook".to_string(),
+    events: vec!["email.sent".to_string()],
+};
+
+let response = webhooks.create(&webhook)?;
+println!("Webhook created! ID: {}", response.id);
+```
+
+#### Update Webhook
+
+```rust
+use unsent::models::WebhookUpdate;
+
+let update = WebhookUpdate {
+    url: Some("https://example.com/new-webhook".to_string()),
+    events: None,
+};
+
+let response = webhooks.update("webhook_id", &update)?;
+```
+
+#### Delete Webhook
+
+```rust
+let response = webhooks.delete("webhook_id")?;
 ```
 
 ### Error Handling
@@ -405,17 +470,30 @@ let client = Client::new("un_xxxx")?.with_http_client(http_client);
 - `emails.get(email_id)` - Get email details
 - `emails.update(email_id, payload)` - Update a scheduled email
 - `emails.cancel(email_id)` - Cancel a scheduled email
+- `emails.list(params)` - List emails with filters
+- `emails.bounces(params)` - List bounced emails
+- `emails.complaints(params)` - List spam complaints
+- `emails.unsubscribes(params)` - List unsubscribes
 
 ### Contact Methods
 
+- `contacts.list(book_id, params)` - List contacts
 - `contacts.create(book_id, payload)` - Create a contact
 - `contacts.get(book_id, contact_id)` - Get contact details
 - `contacts.update(book_id, contact_id, payload)` - Update a contact
 - `contacts.upsert(book_id, contact_id, payload)` - Upsert a contact
 - `contacts.delete(book_id, contact_id)` - Delete a contact
 
+### Contact Book Methods
+- `contact_books.list()` - List contact books
+- `contact_books.create(payload)` - Create contact book
+- `contact_books.get(id)` - Get contact book
+- `contact_books.update(id, payload)` - Update contact book
+- `contact_books.delete(id)` - Delete contact book
+
 ### Campaign Methods
 
+- `campaigns.list()` - List all campaigns
 - `campaigns.create(payload)` - Create a campaign
 - `campaigns.get(campaign_id)` - Get campaign details
 - `campaigns.schedule(campaign_id, payload)` - Schedule a campaign
@@ -429,6 +507,20 @@ let client = Client::new("un_xxxx")?.with_http_client(http_client);
 - `domains.verify(domain_id)` - Verify a domain
 - `domains.get(domain_id)` - Get domain details
 - `domains.delete(domain_id)` - Delete a domain
+
+### Webhook Methods
+
+- `webhooks.list()` - List all webhooks
+- `webhooks.create(payload)` - Create a webhook
+- `webhooks.update(id, payload)` - Update a webhook
+- `webhooks.delete(id)` - Delete a webhook
+
+### Other Resources
+- `api_keys` - Manage API keys
+- `settings` - Team settings
+- `analytics` - Get email statistics
+- `templates` - Manage email templates
+- `suppressions` - Manage suppression lists
 
 ## Requirements
 
