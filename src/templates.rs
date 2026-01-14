@@ -11,28 +11,28 @@ impl<'a> TemplatesClient<'a> {
     }
 
     /// List all templates
-    pub fn list(&self) -> Result<Vec<Template>> {
-        self.client.get("/templates")
+    pub async fn list(&self) -> Result<Response<Vec<Template>>> {
+        self.client.get("/templates").await
     }
 
     /// Create a new template
-    pub fn create(&self, payload: &TemplateCreate) -> Result<TemplateCreateResponse> {
-        self.client.post("/templates", payload)
+    pub async fn create(&self, payload: &TemplateCreate) -> Result<TemplateCreateResponse> {
+        self.client.post("/templates", payload).await
     }
 
     /// Get template details by ID
-    pub fn get(&self, id: &str) -> Result<Template> {
-        self.client.get(&format!("/templates/{}", id))
+    pub async fn get(&self, id: &str) -> Result<Template> {
+        self.client.get(&format!("/templates/{}", id)).await
     }
 
     /// Update a template
-    pub fn update(&self, id: &str, payload: &TemplateUpdate) -> Result<TemplateUpdateResponse> {
-        self.client.patch(&format!("/templates/{}", id), payload)
+    pub async fn update(&self, id: &str, payload: &TemplateUpdate) -> Result<TemplateUpdateResponse> {
+        self.client.patch(&format!("/templates/{}", id), payload).await
     }
 
     /// Delete a template
-    pub fn delete(&self, id: &str) -> Result<TemplateDeleteResponse> {
-        self.client.delete(&format!("/templates/{}", id))
+    pub async fn delete(&self, id: &str) -> Result<TemplateDeleteResponse> {
+        self.client.delete(&format!("/templates/{}", id)).await
     }
 }
 

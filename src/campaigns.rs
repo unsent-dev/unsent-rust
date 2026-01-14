@@ -10,38 +10,41 @@ impl<'a> CampaignsClient<'a> {
         Self { client }
     }
 
-    pub fn create(&self, payload: &CampaignCreate) -> Result<CampaignCreateResponse> {
-        self.client.post("/campaigns", payload)
+    pub async fn create(&self, payload: &CampaignCreate) -> Result<CampaignCreateResponse> {
+        self.client.post("/campaigns", payload).await
     }
 
-    pub fn get(&self, campaign_id: &str) -> Result<Campaign> {
-        self.client.get(&format!("/campaigns/{}", campaign_id))
+    pub async fn get(&self, campaign_id: &str) -> Result<Campaign> {
+        self.client.get(&format!("/campaigns/{}", campaign_id)).await
     }
 
-    pub fn schedule(
+    pub async fn schedule(
         &self,
         campaign_id: &str,
         payload: &CampaignSchedule,
     ) -> Result<CampaignScheduleResponse> {
         self.client
-            .post(&format!("/campaigns/{}/schedule", campaign_id), payload)
+            .post(
+                &format!("/campaigns/{}/schedule", campaign_id),
+                payload
+            ).await
     }
 
-    pub fn pause(&self, campaign_id: &str) -> Result<CampaignActionResponse> {
+    pub async fn pause(&self, campaign_id: &str) -> Result<CampaignActionResponse> {
         let empty: std::collections::HashMap<String, String> = std::collections::HashMap::new();
         self.client
-            .post(&format!("/campaigns/{}/pause", campaign_id), &empty)
+            .post(&format!("/campaigns/{}/pause", campaign_id), &empty).await
     }
 
-    pub fn resume(&self, campaign_id: &str) -> Result<CampaignActionResponse> {
+    pub async fn resume(&self, campaign_id: &str) -> Result<CampaignActionResponse> {
         let empty: std::collections::HashMap<String, String> = std::collections::HashMap::new();
         self.client
-            .post(&format!("/campaigns/{}/resume", campaign_id), &empty)
+            .post(&format!("/campaigns/{}/resume", campaign_id), &empty).await
     }
 
     /// List all campaigns
-    pub fn list(&self) -> Result<Vec<CampaignListItem>> {
-        self.client.get("/campaigns")
+    pub async fn list(&self) -> Result<Vec<CampaignListItem>> {
+        self.client.get("/campaigns").await
     }
 }
 

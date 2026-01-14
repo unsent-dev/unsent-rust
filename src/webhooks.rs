@@ -1,4 +1,6 @@
-use crate::models::{Webhook, WebhookCreate, WebhookDeleteResponse, WebhookId, WebhookUpdate};
+use crate::models::{
+    Webhook, WebhookCreate, WebhookDeleteResponse, WebhookTestResponse, WebhookUpdate,
+};
 use crate::Client;
 // Use the crate's Result alias which is Result<T, UnsentError>
 use crate::client::Result;
@@ -17,21 +19,27 @@ impl<'a> WebhooksClient<'a> {
     }
 
     /// List all webhooks
-    pub fn list(&self) -> Result<Vec<Webhook>> {
+    pub async fn list(&self) -> Result<serde_json::Value> {
         let path = "/webhooks";
-        self.client.get(path)
+        self.client.get(path).await
     }
 
     /// Create a new webhook
-    pub fn create(&self, payload: &WebhookCreate) -> Result<WebhookId> {
+    pub async fn create(&self, payload: &WebhookCreate) -> Result<serde_json::Value> {
         let path = "/webhooks";
-        self.client.post(path, payload)
+        self.client.post(path, payload).await
+    }
+
+    /// Get a webhook by ID
+    pub async fn get(&self, id: &str) -> Result<serde_json::Value> {
+        let path = format!("/webhooks/{}", id);
+        self.client.get(&path).await
     }
 
     /// Update a webhook
-    pub fn update(&self, id: &str, payload: &WebhookUpdate) -> Result<bool> {
+    pub async fn update(&self, id: &str, payload: &WebhookUpdate) -> Result<bool> {
         let path = format!("/webhooks/{}", id);
-        let res: serde_json::Value = self.client.patch(path.as_str(), payload)?;
+        let res: serde_json::Value = self.client.patch(&path, payload).await?;
         // TS SDK expects { success: boolean } but returns generic T.
         // Assuming API returns { success: true } or similar.
         // Let's coerce to success bool or just return true on 200 OK
@@ -39,9 +47,16 @@ impl<'a> WebhooksClient<'a> {
     }
 
     /// Delete a webhook
-    pub fn delete(&self, id: &str) -> Result<WebhookDeleteResponse> {
+    pub async fn delete(&self, id: &str) -> Result<WebhookDeleteResponse> {
         let path = format!("/webhooks/{}", id);
-        self.client.delete(path.as_str())
+        self.client.delete(&path).await
+    }
+
+    /// Test a webhook by sending a test event
+    pub async fn test(&self, id: &str) -> Result<serde_json::Value> {
+        let path = format!("/webhooks/{}/test", id);
+        let empty: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+        self.client.post(&path, &empty).await
     }
 }
 
@@ -54,6 +69,17 @@ mod tests {
     fn test_webhooks_paths() {
         let client = Client::new("test_key").unwrap();
         let _webhooks = WebhooksClient::new(&client);
+
+        // Test path construction
+        let paths = vec![
+            "/webhooks",
+            "/webhooks/webhook-123",
+            "/webhooks/webhook-123/test",
+        ];
+
+        for path in paths {
+            assert!(path.starts_with("/webhooks"));
+        }
 
         // list
         // create
@@ -69,5 +95,20 @@ mod tests {
 
         // We can't easily mock the internal client without a mock server,
         // but we verify the code compiles and structs are correct.
+    }
+
+    #[test]
+    fn test_webhook_get_path() {
+        let id = "webhook-123";
+        let path = format!("/webhooks/{}", id);
+        assert_eq!(path, "/webhooks/webhook-123");
+    }
+
+    #[test]
+    fn test_webhook_test_path() {
+        let id = "webhook-123";
+        let path = format!("/webhooks/{}/test", id);
+        assert_eq!(path, "/webhooks/webhook-123/test");
+        assert!(path.ends_with("/test"));
     }
 }

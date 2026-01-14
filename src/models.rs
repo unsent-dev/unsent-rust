@@ -14,7 +14,7 @@ pub type ContactBookUpdate = UpdateContactBookRequest;
 pub type ContactBookUpdateResponse = UpdateContactBook200Response;
 pub type ContactBookDeleteResponse = DeleteContactBook200Response;
 pub type TemplateCreate = CreateTemplateRequest;
-pub type Template = GetTemplates200ResponseInner;
+pub type Template = GetTemplates200ResponseDataInner;
 pub type TemplateCreateResponse = CreateTemplate200Response;
 pub type TemplateUpdate = UpdateTemplateRequest;
 pub type Domain = GetDomains200ResponseInner;
@@ -50,6 +50,7 @@ impl std::error::Error for APIError {}
 pub struct Webhook {
     pub id: String,
     pub url: String,
+    #[serde(rename = "eventTypes")]
     pub events: Vec<String>,
     pub created_at: String,
 }
@@ -57,6 +58,7 @@ pub struct Webhook {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct WebhookCreate {
     pub url: String,
+    #[serde(rename = "eventTypes")]
     pub events: Vec<String>,
 }
 
@@ -64,7 +66,7 @@ pub struct WebhookCreate {
 pub struct WebhookUpdate {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub url: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", rename = "eventTypes")]
     pub events: Option<Vec<String>>,
 }
 
@@ -76,6 +78,30 @@ pub struct WebhookId {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct WebhookDeleteResponse {
     pub success: bool,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct WebhookTestResponse {
+    pub success: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub message: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct VersionResponse {
+    pub version: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub environment: Option<String>,
+    #[serde(rename = "nodeVersion", skip_serializing_if = "Option::is_none")]
+    pub node_version: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub platform: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub arch: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub timestamp: Option<String>,
+    #[serde(flatten)]
+    pub extra: Option<serde_json::Value>,
 }
 
 // Response types
@@ -130,7 +156,14 @@ pub struct DomainDeleteResponse {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Response<T> {
+    pub data: T,
+}
+
+// Revert previous changes or unused structs
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct EmailCreateResponse {
+    #[serde(rename = "emailId")]
     pub id: String,
 }
 
@@ -326,4 +359,126 @@ pub struct SuppressionListParams {
     pub search: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reason: Option<Reason>,
+}
+
+// Activity module types
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct ActivityParams {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub page: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub limit: Option<i32>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct ActivityResponse {
+    #[serde(flatten)]
+    pub data: serde_json::Value,
+}
+
+// Events module types
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct EventsListParams {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub page: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub limit: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub status: Option<String>,
+    #[serde(rename = "startDate", skip_serializing_if = "Option::is_none")]
+    pub start_date: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct EventsListResponse {
+    #[serde(flatten)]
+    pub data: serde_json::Value,
+}
+
+// Metrics module types
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct MetricsParams {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub period: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct MetricsResponse {
+    #[serde(flatten)]
+    pub data: serde_json::Value,
+}
+
+// Stats module types
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct StatsParams {
+    #[serde(rename = "startDate", skip_serializing_if = "Option::is_none")]
+    pub start_date: Option<String>,
+    #[serde(rename = "endDate", skip_serializing_if = "Option::is_none")]
+    pub end_date: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct StatsResponse {
+    #[serde(flatten)]
+    pub data: serde_json::Value,
+}
+
+// Teams module types
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Team {
+    pub id: String,
+    pub name: String,
+    pub plan: String,
+    #[serde(rename = "createdAt")]
+    pub created_at: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct TeamsListResponse {
+    pub teams: Vec<Team>,
+}
+
+// Domain analytics/stats types
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct DomainAnalyticsParams {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub period: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct DomainAnalytics {
+    pub date: String,
+    pub sent: f64,
+    pub delivered: f64,
+    pub opened: f64,
+    pub clicked: f64,
+    pub bounced: f64,
+    pub complained: f64,
+}
+
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct DomainStatsParams {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub period: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct DomainStats {
+    #[serde(flatten)]
+    pub data: serde_json::Value,
+}
+
+// Email events types
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct EmailEventsParams {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub page: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub limit: Option<i32>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct EmailEventsResponse {
+    #[serde(flatten)]
+    pub data: serde_json::Value,
 }

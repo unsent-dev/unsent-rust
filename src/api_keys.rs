@@ -11,18 +11,18 @@ impl<'a> ApiKeysClient<'a> {
     }
 
     /// List all API keys for the current team
-    pub fn list(&self) -> Result<Vec<ApiKey>> {
-        self.client.get("/api-keys")
+    pub async fn list(&self) -> Result<Vec<ApiKey>> {
+        self.client.get("/api-keys").await
     }
 
     /// Create a new API key
-    pub fn create(&self, payload: &ApiKeyCreate) -> Result<ApiKeyCreateResponse> {
-        self.client.post("/api-keys", payload)
+    pub async fn create(&self, payload: &ApiKeyCreate) -> Result<ApiKeyCreateResponse> {
+        self.client.post("/api-keys", payload).await
     }
 
     /// Delete an API key by ID
-    pub fn delete(&self, id: &str) -> Result<ApiKeyDeleteResponse> {
-        self.client.delete(&format!("/api-keys/{}", id))
+    pub async fn delete(&self, id: &str) -> Result<ApiKeyDeleteResponse> {
+        self.client.delete(&format!("/api-keys/{}", id)).await
     }
 }
 

@@ -11,8 +11,8 @@ impl<'a> SettingsClient<'a> {
     }
 
     /// Get team settings
-    pub fn get(&self) -> Result<Settings> {
-        self.client.get("/settings")
+    pub async fn get(&self) -> Result<GetSettings200Response> {
+        self.client.get("/settings").await
     }
 }
 

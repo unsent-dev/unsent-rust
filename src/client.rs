@@ -1,5 +1,5 @@
 use crate::models::APIError;
-use reqwest::blocking::Client as HttpClient;
+use reqwest::Client as HttpClient;
 use std::env;
 
 const DEFAULT_BASE_URL: &str = "https://api.unsent.dev";
@@ -31,6 +31,13 @@ pub struct Client {
 
 impl Client {
     pub fn new(key: impl Into<String>) -> Result<Self> {
+        Self::with_base_url(key, None::<String>)
+    }
+
+    pub fn with_base_url(
+        key: impl Into<String>,
+        base_url: Option<impl Into<String>>,
+    ) -> Result<Self> {
         let key = key.into();
         let key = if key.is_empty() {
             env::var("UNSENT_API_KEY")
@@ -40,9 +47,11 @@ impl Client {
             key
         };
 
-        let base_url = env::var("UNSENT_BASE_URL")
-            .or_else(|_| env::var("UNSENT_BASE_URL"))
-            .unwrap_or_else(|_| DEFAULT_BASE_URL.to_string());
+        let base_url = base_url
+            .map(|url| url.into())
+            .or_else(|| env::var("UNSENT_API_BASE_URL").ok())
+            .or_else(|| env::var("UNSENT_BASE_URL").ok())
+            .unwrap_or_else(|| DEFAULT_BASE_URL.to_string());
 
         Ok(Self {
             key,
@@ -52,7 +61,7 @@ impl Client {
         })
     }
 
-    pub fn with_base_url(mut self, url: impl Into<String>) -> Self {
+    pub fn set_base_url(mut self, url: impl Into<String>) -> Self {
         self.base_url = format!("{}/v1", url.into());
         self
     }
@@ -67,7 +76,7 @@ impl Client {
         self
     }
 
-    fn request<T: serde::de::DeserializeOwned>(
+    async fn request<T: serde::de::DeserializeOwned>(
         &self,
         method: reqwest::Method,
         path: &str,
@@ -90,9 +99,9 @@ impl Client {
             request = request.json(body);
         }
 
-        let response = request.send()?;
+        let response = request.send().await?;
         let status = response.status();
-        let body_text = response.text()?;
+        let body_text = response.text().await?;
 
         if !status.is_success() {
             let api_error: APIError =
@@ -106,81 +115,83 @@ impl Client {
             }
         }
 
-        Ok(serde_json::from_str(&body_text)?)
+        Ok(serde_json::from_str(&body_text).map_err(|e| {
+            UnsentError::Other(format!("JSON error: {} Body: {}", e, body_text))
+        })?)
     }
 
-    pub fn post<T: serde::de::DeserializeOwned>(
+    pub async fn post<T: serde::de::DeserializeOwned>(
         &self,
         path: &str,
         body: &impl serde::Serialize,
     ) -> Result<T> {
-        self.request(reqwest::Method::POST, path, Some(body), None)
+        self.request(reqwest::Method::POST, path, Some(body), None).await
     }
 
-    pub fn post_with_headers<T: serde::de::DeserializeOwned>(
-        &self,
-        path: &str,
-        body: &impl serde::Serialize,
-        headers: reqwest::header::HeaderMap,
-    ) -> Result<T> {
-        self.request(reqwest::Method::POST, path, Some(body), Some(headers))
-    }
-
-    pub fn get<T: serde::de::DeserializeOwned>(&self, path: &str) -> Result<T> {
-        self.request::<T>(reqwest::Method::GET, path, None::<&()>, None)
-    }
-
-    pub fn get_with_headers<T: serde::de::DeserializeOwned>(
-        &self,
-        path: &str,
-        headers: reqwest::header::HeaderMap,
-    ) -> Result<T> {
-        self.request::<T>(reqwest::Method::GET, path, None::<&()>, Some(headers))
-    }
-
-    pub fn put<T: serde::de::DeserializeOwned>(
-        &self,
-        path: &str,
-        body: &impl serde::Serialize,
-    ) -> Result<T> {
-        self.request(reqwest::Method::PUT, path, Some(body), None)
-    }
-
-    pub fn put_with_headers<T: serde::de::DeserializeOwned>(
+    pub async fn post_with_headers<T: serde::de::DeserializeOwned>(
         &self,
         path: &str,
         body: &impl serde::Serialize,
         headers: reqwest::header::HeaderMap,
     ) -> Result<T> {
-        self.request(reqwest::Method::PUT, path, Some(body), Some(headers))
+        self.request(reqwest::Method::POST, path, Some(body), Some(headers)).await
     }
 
-    pub fn patch<T: serde::de::DeserializeOwned>(
+    pub async fn get<T: serde::de::DeserializeOwned>(&self, path: &str) -> Result<T> {
+        self.request::<T>(reqwest::Method::GET, path, None::<&()>, None).await
+    }
+
+    pub async fn get_with_headers<T: serde::de::DeserializeOwned>(
+        &self,
+        path: &str,
+        headers: reqwest::header::HeaderMap,
+    ) -> Result<T> {
+        self.request::<T>(reqwest::Method::GET, path, None::<&()>, Some(headers)).await
+    }
+
+    pub async fn put<T: serde::de::DeserializeOwned>(
         &self,
         path: &str,
         body: &impl serde::Serialize,
     ) -> Result<T> {
-        self.request(reqwest::Method::PATCH, path, Some(body), None)
+        self.request(reqwest::Method::PUT, path, Some(body), None).await
     }
 
-    pub fn patch_with_headers<T: serde::de::DeserializeOwned>(
+    pub async fn put_with_headers<T: serde::de::DeserializeOwned>(
         &self,
         path: &str,
         body: &impl serde::Serialize,
         headers: reqwest::header::HeaderMap,
     ) -> Result<T> {
-        self.request(reqwest::Method::PATCH, path, Some(body), Some(headers))
+        self.request(reqwest::Method::PUT, path, Some(body), Some(headers)).await
     }
 
-    pub fn delete<T: serde::de::DeserializeOwned>(&self, path: &str) -> Result<T> {
-        self.request::<T>(reqwest::Method::DELETE, path, None::<&()>, None)
+    pub async fn patch<T: serde::de::DeserializeOwned>(
+        &self,
+        path: &str,
+        body: &impl serde::Serialize,
+    ) -> Result<T> {
+        self.request(reqwest::Method::PATCH, path, Some(body), None).await
     }
 
-    pub fn delete_with_headers<T: serde::de::DeserializeOwned>(
+    pub async fn patch_with_headers<T: serde::de::DeserializeOwned>(
+        &self,
+        path: &str,
+        body: &impl serde::Serialize,
+        headers: reqwest::header::HeaderMap,
+    ) -> Result<T> {
+        self.request(reqwest::Method::PATCH, path, Some(body), Some(headers)).await
+    }
+
+    pub async fn delete<T: serde::de::DeserializeOwned>(&self, path: &str) -> Result<T> {
+        self.request::<T>(reqwest::Method::DELETE, path, None::<&()>, None).await
+    }
+
+    pub async fn delete_with_headers<T: serde::de::DeserializeOwned>(
         &self,
         path: &str,
         headers: reqwest::header::HeaderMap,
     ) -> Result<T> {
-        self.request::<T>(reqwest::Method::DELETE, path, None::<&()>, Some(headers))
+        self.request::<T>(reqwest::Method::DELETE, path, None::<&()>, Some(headers)).await
     }
 }

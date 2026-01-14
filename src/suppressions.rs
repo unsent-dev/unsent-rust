@@ -11,7 +11,7 @@ impl<'a> SuppressionsClient<'a> {
     }
 
     /// List suppressed emails
-    pub fn list(&self, params: Option<&SuppressionListParams>) -> Result<SuppressionListResponse> {
+    pub async fn list(&self, params: Option<&SuppressionListParams>) -> Result<serde_json::Value> {
         let mut path = "/suppressions".to_string();
 
         if let Some(p) = params {
@@ -21,18 +21,18 @@ impl<'a> SuppressionsClient<'a> {
             }
         }
 
-        self.client.get(&path)
+        self.client.get(&path).await
     }
 
     /// Add an email to the suppression list
-    pub fn add(&self, payload: &AddSuppressionRequest) -> Result<SuppressionResponse> {
-        self.client.post("/suppressions", payload)
+    pub async fn add(&self, payload: &AddSuppressionRequest) -> Result<serde_json::Value> {
+        self.client.post("/suppressions", payload).await
     }
 
     /// Remove an email from the suppression list
-    pub fn delete(&self, email: &str) -> Result<SuppressionDeleteResponse> {
+    pub async fn delete(&self, email: &str) -> Result<serde_json::Value> {
         self.client
-            .delete(&format!("/suppressions/email/{}", email))
+            .delete(&format!("/suppressions/email/{}", email)).await
     }
 }
 

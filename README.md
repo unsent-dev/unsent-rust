@@ -175,7 +175,94 @@ let response = emails.cancel("email_id")?;
 println!("Email cancelled successfully");
 ```
 
+#### List Emails
+
+```rust
+use unsent::models::EmailListParams;
+
+let params = EmailListParams {
+    limit: Some(20),
+    page: Some(1),
+    ..Default::default()
+};
+
+let emails = emails.list(Some(&params))?;
+```
+
+#### Email Statistics
+
+```rust
+// Get bounces
+let bounces = emails.bounces(None)?;
+
+// Get complaints
+let complaints = emails.complaints(None)?;
+
+// Get unsubscribes
+let unsubscribes = emails.unsubscribes(None)?;
+```
+
+### Managing Contact Books
+
+#### List Contact Books
+
+```rust
+use unsent::contact_books::ContactBooksClient;
+
+let client = Client::new("un_xxxx")?;
+let books = ContactBooksClient::new(&client);
+
+let book_list = books.list()?;
+```
+
+#### Create Contact Book
+
+```rust
+use unsent::models::ContactBookCreate;
+
+let book = ContactBookCreate {
+    name: "Newsletter Subscribers".to_string(),
+    emoji: Some("📧".to_string()),
+    properties: None,
+};
+
+let response = books.create(&book)?;
+```
+
+#### Get Contact Book
+
+```rust
+let book = books.get("book_id")?;
+```
+
+#### Update Contact Book
+
+```rust
+use unsent::models::ContactBookUpdate;
+
+let update = ContactBookUpdate {
+    name: Some("VIP List".to_string()),
+    emoji: None,
+    properties: None,
+};
+
+let response = books.update("book_id", &update)?;
+```
+
+#### Delete Contact Book
+
+```rust
+let response = books.delete("book_id")?;
+```
+
 ### Managing Contacts
+
+#### List Contacts
+
+```rust
+// List contacts in a book
+let contacts_list = contacts.list("book_id", None)?;
+```
 
 #### Create Contact
 
@@ -259,6 +346,12 @@ let response = contacts.delete("contact_book_id", "contact_id")?;
 ```
 
 ### Managing Campaigns
+
+#### List Campaigns
+
+```rust
+let active_campaigns = campaigns.list().await?;
+```
 
 #### Create Campaign
 
@@ -395,6 +488,12 @@ let response = webhooks.create(&webhook)?;
 println!("Webhook created! ID: {}", response.id);
 ```
 
+#### Get Webhook
+
+```rust
+let webhook = webhooks.get("webhook_id").await?;
+```
+
 #### Update Webhook
 
 ```rust
@@ -405,13 +504,211 @@ let update = WebhookUpdate {
     events: None,
 };
 
-let response = webhooks.update("webhook_id", &update)?;
+let response = webhooks.update("webhook_id", &update).await?;
+```
+
+#### Test Webhook
+
+```rust
+let response = webhooks.test("webhook_id").await?;
 ```
 
 #### Delete Webhook
 
 ```rust
 let response = webhooks.delete("webhook_id")?;
+```
+
+### Managing Templates
+
+#### List Templates
+
+```rust
+use unsent::templates::TemplatesClient;
+
+let client = Client::new("un_xxxx")?;
+let templates = TemplatesClient::new(&client);
+
+let template_list = templates.list().await?;
+```
+
+#### Create Template
+
+```rust
+use unsent::models::TemplateCreate;
+
+let template = TemplateCreate {
+    name: "Welcome Email".to_string(),
+    subject: "Welcome!".to_string(),
+    html: Some("<h1>Welcome</h1>".to_string()),
+    content: Some("Welcome".to_string()),
+};
+
+let response = templates.create(&template).await?;
+```
+
+#### Get Template
+
+```rust
+let template = templates.get("template_id").await?;
+```
+
+#### Update Template
+
+```rust
+use unsent::models::TemplateUpdate;
+
+let update = TemplateUpdate {
+    name: Some("Updated Name".to_string()),
+    subject: None,
+    html: None,
+    content: None,
+};
+
+let response = templates.update("template_id", &update).await?;
+```
+
+#### Delete Template
+
+```rust
+let response = templates.delete("template_id").await?;
+```
+
+### Managing Suppressions
+
+#### List Suppressions
+
+```rust
+use unsent::suppressions::SuppressionsClient;
+
+let client = Client::new("un_xxxx")?;
+let suppressions = SuppressionsClient::new(&client);
+
+let suppression_list = suppressions.list(None).await?;
+```
+
+#### Add Suppression
+
+```rust
+use unsent::models::{AddSuppressionRequest, Reason};
+
+let req = AddSuppressionRequest::new("spam@example.com".to_string(), Reason::Complaint);
+let response = suppressions.add(&req).await?;
+```
+
+#### Delete Suppression
+
+```rust
+let response = suppressions.delete("spam@example.com").await?;
+```
+
+### Activity & Analytics
+
+#### Activity Feed
+
+```rust
+use unsent::activity::ActivityClient;
+
+let client = Client::new("un_xxxx")?;
+let activity = ActivityClient::new(&client);
+
+let feed = activity.get(None).await?;
+```
+
+#### Analytics
+
+```rust
+use unsent::analytics::AnalyticsClient;
+
+let client = Client::new("un_xxxx")?;
+let analytics = AnalyticsClient::new(&client);
+
+// General analytics
+let stats = analytics.get().await?;
+
+// Time series
+let time_series = analytics.time_series(None).await?;
+
+// Reputation
+let reputation = analytics.reputation(None).await?;
+```
+
+#### Metrics & Stats
+
+```rust
+use unsent::{metrics::MetricsClient, stats::StatsClient};
+
+let client = Client::new("un_xxxx")?;
+
+// Metrics
+let metrics = MetricsClient::new(&client);
+let metrics_data = metrics.get(None).await?;
+
+// Stats
+let stats = StatsClient::new(&client);
+let stats_data = stats.get(None).await?;
+```
+
+#### Events
+
+```rust
+use unsent::events::EventsClient;
+
+let client = Client::new("un_xxxx")?;
+let events = EventsClient::new(&client);
+
+let event_list = events.list(None).await?;
+```
+
+### System & Settings
+
+#### API Keys
+
+```rust
+use unsent::api_keys::ApiKeysClient;
+use unsent::models::ApiKeyCreate;
+
+let client = Client::new("un_xxxx")?;
+let api_keys = ApiKeysClient::new(&client);
+
+// List
+let keys = api_keys.list().await?;
+
+// Create
+let new_key = ApiKeyCreate::new("Prod Key".to_string());
+let response = api_keys.create(&new_key).await?;
+
+// Delete
+let response = api_keys.delete("key_id").await?;
+```
+
+#### Settings & Team
+
+```rust
+use unsent::{settings::SettingsClient, teams::TeamsClient};
+
+let client = Client::new("un_xxxx")?;
+
+// Settings
+let settings_client = SettingsClient::new(&client);
+let settings = settings_client.get().await?;
+
+// Teams
+let teams_client = TeamsClient::new(&client);
+let teams = teams_client.list().await?;
+let my_team = teams_client.get().await?;
+```
+
+#### System Health
+
+```rust
+use unsent::system::SystemClient;
+
+let client = Client::new("un_xxxx")?;
+let system = SystemClient::new(&client);
+
+let health = system.health().await?;
+let version = system.version().await?;
 ```
 
 ### Error Handling
@@ -485,6 +782,7 @@ let client = Client::new("un_xxxx")?.with_http_client(http_client);
 - `contacts.delete(book_id, contact_id)` - Delete a contact
 
 ### Contact Book Methods
+
 - `contact_books.list()` - List contact books
 - `contact_books.create(payload)` - Create contact book
 - `contact_books.get(id)` - Get contact book
@@ -515,12 +813,61 @@ let client = Client::new("un_xxxx")?.with_http_client(http_client);
 - `webhooks.update(id, payload)` - Update a webhook
 - `webhooks.delete(id)` - Delete a webhook
 
-### Other Resources
-- `api_keys` - Manage API keys
-- `settings` - Team settings
-- `analytics` - Get email statistics
-- `templates` - Manage email templates
-- `suppressions` - Manage suppression lists
+### Template Methods
+
+- `templates.list()` - List all templates
+- `templates.create(payload)` - Create a template
+- `templates.get(id)` - Get template details
+- `templates.update(id, payload)` - Update a template
+- `templates.delete(id)` - Delete a template
+
+### Activity Methods
+
+- `activity.get(params)` - Get activity feed
+
+### Analytics Methods
+
+- `analytics.get()` - Get email analytics
+- `analytics.time_series(params)` - Get analytics time series
+- `analytics.reputation(params)` - Get sender reputation
+
+### Metrics Methods
+
+- `metrics.get(params)` - Get performance metrics
+
+### Stats Methods
+
+- `stats.get(params)` - Get email statistics
+
+### Event Methods
+
+- `events.list(params)` - List email events
+
+### API Key Methods
+
+- `api_keys.list()` - List all API keys
+- `api_keys.create(payload)` - Create an API key
+- `api_keys.delete(id)` - Delete an API key
+
+### Settings Methods
+
+- `settings.get()` - Get team settings
+
+### System Methods
+
+- `system.health()` - Check API health
+- `system.version()` - Get API version
+
+### Team Methods
+
+- `teams.list()` - List all teams
+- `teams.get()` - Get current team
+
+### Suppression Methods
+
+- `suppressions.list(params)` - List suppressed emails
+- `suppressions.add(payload)` - Add email to suppression list
+- `suppressions.delete(email)` - Remove email from suppression list
 
 ## Requirements
 

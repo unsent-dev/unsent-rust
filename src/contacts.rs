@@ -10,19 +10,19 @@ impl<'a> ContactsClient<'a> {
         Self { client }
     }
 
-    pub fn create(&self, book_id: &str, payload: &ContactCreate) -> Result<ContactCreateResponse> {
+    pub async fn create(&self, book_id: &str, payload: &ContactCreate) -> Result<ContactCreateResponse> {
         self.client
-            .post(&format!("/contactBooks/{}/contacts", book_id), payload)
+            .post(&format!("/contactBooks/{}/contacts", book_id), payload).await
     }
 
-    pub fn get(&self, book_id: &str, contact_id: &str) -> Result<Contact> {
+    pub async fn get(&self, book_id: &str, contact_id: &str) -> Result<Contact> {
         self.client.get(&format!(
             "/contactBooks/{}/contacts/{}",
             book_id, contact_id
-        ))
+        )).await
     }
 
-    pub fn update(
+    pub async fn update(
         &self,
         book_id: &str,
         contact_id: &str,
@@ -31,10 +31,10 @@ impl<'a> ContactsClient<'a> {
         self.client.patch(
             &format!("/contactBooks/{}/contacts/{}", book_id, contact_id),
             payload,
-        )
+        ).await
     }
 
-    pub fn upsert(
+    pub async fn upsert(
         &self,
         book_id: &str,
         contact_id: &str,
@@ -43,18 +43,18 @@ impl<'a> ContactsClient<'a> {
         self.client.put(
             &format!("/contactBooks/{}/contacts/{}", book_id, contact_id),
             payload,
-        )
+        ).await
     }
 
-    pub fn delete(&self, book_id: &str, contact_id: &str) -> Result<ContactDeleteResponse> {
+    pub async fn delete(&self, book_id: &str, contact_id: &str) -> Result<ContactDeleteResponse> {
         self.client.delete(&format!(
             "/contactBooks/{}/contacts/{}",
             book_id, contact_id
-        ))
+        )).await
     }
 
     /// List contacts in a contact book
-    pub fn list(&self, book_id: &str, params: Option<&ContactListParams>) -> Result<Vec<Contact>> {
+    pub async fn list(&self, book_id: &str, params: Option<&ContactListParams>) -> Result<Vec<Contact>> {
         let mut path = format!("/contactBooks/{}/contacts", book_id);
 
         if let Some(p) = params {
@@ -64,7 +64,7 @@ impl<'a> ContactsClient<'a> {
             }
         }
 
-        self.client.get(&path)
+        self.client.get(&path).await
     }
 }
 

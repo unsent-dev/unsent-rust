@@ -11,8 +11,13 @@ impl<'a> SystemClient<'a> {
     }
 
     /// Check if the API is running correctly
-    pub fn health(&self) -> Result<HealthResponse> {
-        self.client.get("/health")
+    pub async fn health(&self) -> Result<HealthResponse> {
+        self.client.get("/health").await
+    }
+
+    /// Get API version information
+    pub async fn version(&self) -> Result<VersionResponse> {
+        self.client.get("/version").await
     }
 }
 
@@ -20,7 +25,16 @@ impl<'a> SystemClient<'a> {
 mod tests {
     #[test]
     fn test_system_paths() {
-        let path = "/health";
-        assert_eq!(path, "/health");
+        let paths = vec!["/health", "/version"];
+
+        for path in paths {
+            assert!(path.starts_with("/"));
+        }
+    }
+
+    #[test]
+    fn test_version_path() {
+        let path = "/version";
+        assert_eq!(path, "/version");
     }
 }

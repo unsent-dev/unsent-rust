@@ -11,32 +11,32 @@ impl<'a> ContactBooksClient<'a> {
     }
 
     /// List all contact books
-    pub fn list(&self) -> Result<Vec<ContactBook>> {
-        self.client.get("/contactBooks")
+    pub async fn list(&self) -> Result<Vec<ContactBook>> {
+        self.client.get("/contactBooks").await
     }
 
     /// Create a new contact book
-    pub fn create(&self, payload: &ContactBookCreate) -> Result<ContactBook> {
-        self.client.post("/contactBooks", payload)
+    pub async fn create(&self, payload: &ContactBookCreate) -> Result<ContactBook> {
+        self.client.post("/contactBooks", payload).await
     }
 
     /// Get contact book details by ID
-    pub fn get(&self, id: &str) -> Result<ContactBookDetails> {
-        self.client.get(&format!("/contactBooks/{}", id))
+    pub async fn get(&self, id: &str) -> Result<serde_json::Value> {
+        self.client.get(&format!("/contactBooks/{}", id)).await
     }
 
     /// Update a contact book
-    pub fn update(
+    pub async fn update(
         &self,
         id: &str,
         payload: &ContactBookUpdate,
     ) -> Result<ContactBookUpdateResponse> {
-        self.client.patch(&format!("/contactBooks/{}", id), payload)
+        self.client.patch(&format!("/contactBooks/{}", id), payload).await
     }
 
     /// Delete a contact book
-    pub fn delete(&self, id: &str) -> Result<ContactBookDeleteResponse> {
-        self.client.delete(&format!("/contactBooks/{}", id))
+    pub async fn delete(&self, id: &str) -> Result<ContactBookDeleteResponse> {
+        self.client.delete(&format!("/contactBooks/{}", id)).await
     }
 }
 

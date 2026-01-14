@@ -11,12 +11,12 @@ impl<'a> AnalyticsClient<'a> {
     }
 
     /// Get email analytics
-    pub fn get(&self) -> Result<Analytics> {
-        self.client.get("/analytics")
+    pub async fn get(&self) -> Result<GetAnalytics200Response> {
+        self.client.get("/analytics").await
     }
 
     /// Get analytics time series data
-    pub fn time_series(&self, params: Option<&TimeSeriesParams>) -> Result<TimeSeriesResponse> {
+    pub async fn time_series(&self, params: Option<&TimeSeriesParams>) -> Result<TimeSeriesResponse> {
         let mut path = "/analytics/time-series".to_string();
 
         if let Some(p) = params {
@@ -26,11 +26,11 @@ impl<'a> AnalyticsClient<'a> {
             }
         }
 
-        self.client.get(&path)
+        self.client.get(&path).await
     }
 
     /// Get sender reputation metrics
-    pub fn reputation(&self, params: Option<&ReputationParams>) -> Result<ReputationResponse> {
+    pub async fn reputation(&self, params: Option<&ReputationParams>) -> Result<ReputationResponse> {
         let mut path = "/analytics/reputation".to_string();
 
         if let Some(p) = params {
@@ -40,7 +40,7 @@ impl<'a> AnalyticsClient<'a> {
             }
         }
 
-        self.client.get(&path)
+        self.client.get(&path).await
     }
 }
 
