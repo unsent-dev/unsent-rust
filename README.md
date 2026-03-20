@@ -880,5 +880,5 @@ MIT
 ## Support
 
 - [Documentation](https://docs.unsent.dev)
-- [GitHub Issues](https://github.com/souravsspace/unsent-rust/issues)
+- [GitHub Issues](https://github.com/unsent-dev/unsent-rust/issues)
 - [Discord Community](https://discord.gg/unsent)
