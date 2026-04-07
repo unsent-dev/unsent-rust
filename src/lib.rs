@@ -18,5 +18,6 @@ pub mod teams;
 pub mod templates;
 pub mod types;
 pub mod webhooks;
+pub mod provider_connections;
 
 pub use client::{Client, Result, UnsentError};
