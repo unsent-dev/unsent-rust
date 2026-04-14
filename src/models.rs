@@ -12,12 +12,14 @@ pub type ContactBook = CreateContactBook200Response;
 pub type ContactBookDetails = GetContactBook200Response;
 pub type ContactBookUpdate = UpdateContactBookRequest;
 pub type ContactBookUpdateResponse = UpdateContactBook200Response;
-pub type ContactBookDeleteResponse = DeleteContactBook200Response;
+pub type ContactBookDeleteResponse = SuccessResponse;
+pub type CampaignDeleteResponse = SuccessResponse;
 pub type TemplateCreate = CreateTemplateRequest;
 pub type Template = GetTemplates200ResponseDataInner;
 pub type TemplateCreateResponse = CreateTemplate200Response;
 pub type TemplateUpdate = UpdateTemplateRequest;
 pub type Domain = GetDomains200ResponseInner;
+pub type DomainRoute = GetDomains200ResponseInnerRoutesInner;
 pub type DomainCreate = CreateDomainRequest;
 pub type Campaign = CreateCampaign200Response;
 pub type CampaignListItem = GetCampaigns200ResponseInner;
@@ -152,6 +154,16 @@ pub struct DomainVerifyResponse {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct DomainDeleteResponse {
+    pub success: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct DomainRouteUpdateResponse {
+    pub success: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct DomainRouteDeleteResponse {
     pub success: bool,
 }
 

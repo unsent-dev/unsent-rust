@@ -1,3 +1,4 @@
+// @manual
 use crate::client::{Client, Result};
 use crate::models::*;
 

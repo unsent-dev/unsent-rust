@@ -1,7 +1,7 @@
 [package]
 name = "unsent"
-version = "1.0.3"
-edition = "2024"
+version = "1.1.0"
+edition = "2021"
 authors = ["unsent"]
 license = "MIT"
 description = "Rust SDK for the Unsent API - Send transactional emails with ease"
@@ -18,3 +18,4 @@ serde_json = "1.0"
 thiserror = "1.0"
 serde_with = "3.0"
 serde_qs = "0.12"
+uuid = { version = "1", features = ["serde"] }

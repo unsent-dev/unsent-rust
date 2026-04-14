@@ -1,14 +1,12 @@
+// @manual
 use crate::models::{
-    Webhook, WebhookCreate, WebhookDeleteResponse, WebhookTestResponse, WebhookUpdate,
+    WebhookCreate, WebhookDeleteResponse, WebhookUpdate,
 };
 use crate::Client;
 // Use the crate's Result alias which is Result<T, UnsentError>
 use crate::client::Result;
 
 /// Webhooks resource
-///
-/// **NOTE**: This resource is currently in development and not fully implemented on the server side yet.
-/// These methods are placeholders/preparations for future implementation.
 pub struct WebhooksClient<'a> {
     client: &'a Client,
 }

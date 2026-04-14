@@ -1,3 +1,4 @@
+// @manual
 use crate::client::{Client, Result};
 use crate::models::*;
 
@@ -66,6 +67,50 @@ impl<'a> DomainsClient<'a> {
         }
 
         self.client.get(&path).await
+    }
+
+    /// List all routes for a domain
+    pub async fn list_routes(&self, domain_id: &str) -> Result<Vec<DomainRoute>> {
+        self.client
+            .get(&format!("/domains/{}/routes", domain_id))
+            .await
+    }
+
+    /// Add a route to a domain
+    pub async fn add_route(
+        &self,
+        domain_id: &str,
+        payload: &AddDomainRouteRequest,
+    ) -> Result<DomainRoute> {
+        self.client
+            .post(&format!("/domains/{}/routes", domain_id), payload)
+            .await
+    }
+
+    /// Update a route on a domain
+    pub async fn update_route(
+        &self,
+        domain_id: &str,
+        route_id: &str,
+        payload: &UpdateDomainRouteRequest,
+    ) -> Result<DomainRouteUpdateResponse> {
+        self.client
+            .patch(
+                &format!("/domains/{}/routes/{}", domain_id, route_id),
+                payload,
+            )
+            .await
+    }
+
+    /// Delete a route from a domain
+    pub async fn delete_route(
+        &self,
+        domain_id: &str,
+        route_id: &str,
+    ) -> Result<DomainRouteDeleteResponse> {
+        self.client
+            .delete(&format!("/domains/{}/routes/{}", domain_id, route_id))
+            .await
     }
 }
 

@@ -1,3 +1,4 @@
+// @manual
 use crate::client::{Client, Result};
 use crate::models::*;
 
@@ -45,6 +46,11 @@ impl<'a> CampaignsClient<'a> {
     /// List all campaigns
     pub async fn list(&self) -> Result<Vec<CampaignListItem>> {
         self.client.get("/campaigns").await
+    }
+
+    /// Delete a campaign
+    pub async fn delete(&self, campaign_id: &str) -> Result<CampaignDeleteResponse> {
+        self.client.delete(&format!("/campaigns/{}", campaign_id)).await
     }
 }
 
