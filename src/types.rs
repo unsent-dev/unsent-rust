@@ -134,13 +134,16 @@ impl Default for Reason {
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct CreateApiKey200Response {
+    #[serde(rename = "id")]
+    pub id: String,
     #[serde(rename = "token")]
     pub token: String,
 }
 
 impl CreateApiKey200Response {
-    pub fn new(token: String) -> CreateApiKey200Response {
+    pub fn new(id: String, token: String) -> CreateApiKey200Response {
         CreateApiKey200Response {
+            id,
             token,
         }
     }

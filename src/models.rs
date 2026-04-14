@@ -109,6 +109,7 @@ pub struct VersionResponse {
 // Response types
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ApiKeyCreateResponse {
+    pub id: String,
     pub token: String,
 }
 
